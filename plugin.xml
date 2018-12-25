@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="it.sapienzaapps.cordova.smartspaces" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+	<name>SmartSpaces Beacon Plugin</name>
+	<description>SmartSpaces project plugin for BLE Beacons support for Cordova/Ionic</description>
+	<license>GPLv3.0</license>
+	<keywords>cordova,ibeacon,beacon,bluetooth,le,ble,altbeacon</keywords>
+	<repo>https://github.com/sapienzaapps/cordova-plugin-smartspaces.git</repo>
+
+	<!-- Version is set to anything because the only feature we use is the device.platform property which was available
+	since forever. The added benefit is that we don't force the consumers of this plugin to use a certain version of
+	the device plugin. -->
+	<dependency id="cordova-plugin-device" version="*" />
+
+	<js-module name="plugin" src="www/plugin.js">
+		<runs/>
+		<clobbers target="SmartSpacesPlugin" />
+		<merges target="cordova.plugins"/>
+	</js-module>
+
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="SmartSpacesPlugin" >
+				<param name="android-package" value="it.sapienzaapps.cordova.smartspaces.SmartSpacesPlugin"/>
+				<param name="onload" value="true" />
+			</feature>
+		</config-file>
+
+		<source-file src="src/android/SmartSpacesPlugin.java" target-dir="src/it/sapienzaapps/cordova/smartspaces" />
+		<source-file src="src/android/SmartSpacesApplication.java" target-dir="src/it/sapienzaapps/cordova/smartspaces" />
+		<source-file src="src/android/ISmartSpacesAPI.java" target-dir="src/it/sapienzaapps/cordova/smartspaces" />
+		<source-file src="src/android/SmartSpacesBeacon.java" target-dir="src/it/sapienzaapps/cordova/smartspaces" />
+
+		<framework src="src/android/cordova-plugin-smartspaces.gradle" custom="true" type="gradleReference" />
+	</platform>
+
+	<edit-config file="AndroidManifest.xml" target="/manifest/application" mode="merge">
+		<application android:name="it.sapienzaapps.cordova.smartspaces.SmartSpacesApplication" />
+	</edit-config>
+</plugin>

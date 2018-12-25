@@ -1,0 +1,42 @@
+{
+	"name": "it.sapienzaapps.cordova.smartspaces",
+	"version": "1.0.0",
+	"description": "SmartSpaces project plugin for BLE Beacons support for Cordova/Ionic",
+	"cordova": {
+		"id": "it.sapienzaapps.cordova.smartspaces",
+		"platforms": [
+			"ios",
+			"android"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sapienzaapps/cordova-plugin-smartspaces.git"
+	},
+	"keywords": [
+		"cordova",
+		"ibeacon",
+		"beacon",
+		"bluetooth",
+		"le",
+		"ble",
+		"ecosystem:cordova",
+		"cordova-ios",
+		"cordova-android"
+	],
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"author": "SapienzaApps <sapienzaapps@gmail.com>",
+	"license": "GPLv3",
+	"bugs": {
+		"url": "https://github.com/sapienzaapps/cordova-plugin-smartspaces/issues"
+	},
+	"homepage": "https://github.com/sapienzaapps/cordova-plugin-smartspaces",
+	"devDependencies": {
+		"@commitlint/cli": "^7.0.0",
+		"@commitlint/config-conventional": "^7.0.1"
+	}
+}
