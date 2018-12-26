@@ -55,11 +55,12 @@ public class SmartSpacesApplication extends Application implements BootstrapNoti
 
 	public void disableBeaconDetection() {
 		if (regionBootstrap == null) {
-			LOG.e(TAG, "RegionBootstrap object not initialized");
+			LOG.i(TAG, "RegionBootstrap object not initialized");
 			return;
 		}
 		LOG.d(TAG, "Disabling bluetooth beacons detection");
 		this.regionBootstrap.disable();
+		this.regionBootstrap = null;
 	}
 
 	/**
@@ -93,7 +94,9 @@ public class SmartSpacesApplication extends Application implements BootstrapNoti
 
 		BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
 		beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-		backgroundPowerSaver = new BackgroundPowerSaver(this);
+		if (backgroundPowerSaver == null) {
+			backgroundPowerSaver = new BackgroundPowerSaver(this);
+		}
 
 		List<Region> regions = new ArrayList<>();
 		for (int i = 0; i < beaconList.size(); i++) {

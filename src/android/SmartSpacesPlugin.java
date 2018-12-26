@@ -25,6 +25,7 @@ public class SmartSpacesPlugin extends CordovaPlugin {
 				@Override
 				public void run() {
 					try {
+						a.disableBeaconDetection();
 						a.registerForBeacons(args.getString(0));
 					} catch(JSONException ex) {
 						LOG.e(TAG, "JSON Exception on registerForBeacons: " + ex.toString());
