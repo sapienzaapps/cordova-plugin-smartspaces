@@ -11,7 +11,7 @@ import retrofit2.http.POST;
 public interface ISmartSpacesAPI {
 	
 	@GET("regions")
-	Call<List<SmartSpacesBeacon>> getBeaconList();
+	Call<SmartSpacesBeacon[]> getBeaconList();
 
 	@FormUrlEncoded
 	@POST("enter")

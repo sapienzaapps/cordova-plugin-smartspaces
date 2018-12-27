@@ -1,10 +1,14 @@
 package it.sapienzaapps.cordova.smartspaces;
 
 import android.app.Application;
+import android.content.SharedPreferences;
+import android.content.Context;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
+
+import com.google.gson.Gson;
 
 import org.apache.cordova.LOG;
 
@@ -30,6 +34,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class SmartSpacesApplication extends Application implements BootstrapNotifier {
 	private static final String TAG = "SmartSpacesPlugin";
 	
+	private BeaconManager beaconManager;
 	private RegionBootstrap regionBootstrap;
 	private BackgroundPowerSaver backgroundPowerSaver;
 
@@ -41,6 +46,40 @@ public class SmartSpacesApplication extends Application implements BootstrapNoti
 		super.onCreate();
 
 		deviceId = UUID.randomUUID().toString();
+
+		this.beaconManager = BeaconManager.getInstanceForApplication(this);
+
+		this.beaconManager.setDebug(true);
+		this.beaconManager.setRegionStatePersistenceEnabled(false);
+		this.beaconManager.setEnableScheduledScanJobs(true);
+		// beaconManager.setBackgroundBetweenScanPeriod(0);
+		// beaconManager.setBackgroundScanPeriod(1100);
+
+		this.beaconManager.getBeaconParsers().clear();
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("m:0-3=4c000215,i:4-19,i:20-21,i:22-23,p:24-24"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("x,s:0-1=feaa,m:2-2=20,d:3-3,d:4-5,d:6-7,d:8-11,d:12-15"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("s:0-1=feaa,m:2-2=00,p:3-3:-41,i:4-13,i:14-19"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("s:0-1=feaa,m:2-2=10,p:3-3:-41,i:4-20v"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().
+				setBeaconLayout("s:0-1=fed8,m:2-2=00,p:3-3:-41,i:4-21v"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=beac,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+		this.beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+
+		backgroundPowerSaver = new BackgroundPowerSaver(this);
+
+		// Load values for background thread
+		Gson gson = new Gson();
+		SharedPreferences sharedPref = this.getSharedPreferences("it.sapienzaapps.cordova.smartspaces.smartspaces", Context.MODE_PRIVATE);
+		String serverURL = sharedPref.getString("server_url", "");
+		if (!serverURL.isEmpty()) {
+			this.setServerURL(serverURL);
+			SmartSpacesBeacon[] beaconList = gson.fromJson(sharedPref.getString("beacon_list", "[]"), SmartSpacesBeacon[].class);
+			this.createRegionBootstrap(beaconList);
+		}
 	}
 
 	private void setServerURL(String url) {
@@ -50,6 +89,13 @@ public class SmartSpacesApplication extends Application implements BootstrapNoti
 			.build();
 
 		api = retrofit.create(ISmartSpacesAPI.class);
+
+		// Save URL for background thread
+		SharedPreferences sharedPref = this.getSharedPreferences("it.sapienzaapps.cordova.smartspaces.smartspaces", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = sharedPref.edit();
+		editor.putString("server_url", url);
+		editor.commit();
+
 		LOG.d(TAG, "Server URL set to " + url);
 	}
 
@@ -74,33 +120,40 @@ public class SmartSpacesApplication extends Application implements BootstrapNoti
 			return;
 		}
 		LOG.d(TAG, "Getting beacon list");
-		api.getBeaconList().enqueue(new Callback<List<SmartSpacesBeacon>>() {
+		api.getBeaconList().enqueue(new Callback<SmartSpacesBeacon[]>() {
 			@Override
-			public void onResponse(Call<List<SmartSpacesBeacon>> call, Response<List<SmartSpacesBeacon>> response) {
+			public void onResponse(Call<SmartSpacesBeacon[]> call, Response<SmartSpacesBeacon[]> response) {
 				if (response.code() < 300) {
-					beaconListReceived(response.body());
+					SmartSpacesBeacon[] beaconList = response.body();
+					if (beaconList == null) {
+						LOG.w(TAG, "Beacon list null");
+						return;
+					}
+					LOG.d(TAG, "Beacon list received with " + beaconList.length + " beacons");
+
+					// Save the list for background thread
+					Gson gson = new Gson();
+					SharedPreferences sharedPref = SmartSpacesApplication.this.getSharedPreferences("it.sapienzaapps.cordova.smartspaces.smartspaces", Context.MODE_PRIVATE);
+					SharedPreferences.Editor editor = sharedPref.edit();
+					editor.putString("beacon_list", gson.toJson(beaconList));
+					editor.commit();
+
+					createRegionBootstrap(beaconList);
 				}
 			}
 
 			@Override
-			public void onFailure(Call<List<SmartSpacesBeacon>> call, Throwable t) {
+			public void onFailure(Call<SmartSpacesBeacon[]> call, Throwable t) {
 				// Fail silently
 			}
 		});
 	}
 
-	private void beaconListReceived(List<SmartSpacesBeacon> beaconList) {
-		LOG.d(TAG, "Beacon list received with " + beaconList.size() + " beacons");
-
-		BeaconManager beaconManager = BeaconManager.getInstanceForApplication(this);
-		beaconManager.getBeaconParsers().add(new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-		if (backgroundPowerSaver == null) {
-			backgroundPowerSaver = new BackgroundPowerSaver(this);
-		}
+	private void createRegionBootstrap(SmartSpacesBeacon[] beaconList) {
+		disableBeaconDetection();
 
 		List<Region> regions = new ArrayList<>();
-		for (int i = 0; i < beaconList.size(); i++) {
-			SmartSpacesBeacon obj = beaconList.get(i);
+		for(SmartSpacesBeacon obj : beaconList) {
 			Region region = new Region(
 					"it.sapienzaapps.cordova.smartspaces." + obj.name,
 					Identifier.parse(obj.uuid),

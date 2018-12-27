@@ -6,11 +6,6 @@
 	<keywords>cordova,ibeacon,beacon,bluetooth,le,ble,altbeacon</keywords>
 	<repo>https://github.com/sapienzaapps/cordova-plugin-smartspaces.git</repo>
 
-	<!-- Version is set to anything because the only feature we use is the device.platform property which was available
-	since forever. The added benefit is that we don't force the consumers of this plugin to use a certain version of
-	the device plugin. -->
-	<dependency id="cordova-plugin-device" version="*" />
-
 	<js-module name="plugin" src="www/plugin.js">
 		<runs/>
 		<clobbers target="SmartSpacesPlugin" />
@@ -31,9 +26,40 @@
 		<source-file src="src/android/SmartSpacesBeacon.java" target-dir="src/it/sapienzaapps/cordova/smartspaces" />
 
 		<framework src="src/android/cordova-plugin-smartspaces.gradle" custom="true" type="gradleReference" />
-	</platform>
 
-	<edit-config file="AndroidManifest.xml" target="/manifest/application" mode="merge">
-		<application android:name="it.sapienzaapps.cordova.smartspaces.SmartSpacesApplication" />
-	</edit-config>
+		<edit-config file="AndroidManifest.xml" target="/manifest/application" mode="merge">
+			<application android:name="it.sapienzaapps.cordova.smartspaces.SmartSpacesApplication" />
+		</edit-config>
+
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+			<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+		</config-file>
+
+		<config-file target="AndroidManifest.xml" parent="/manifest/application">
+			<service android:name="org.altbeacon.bluetooth.BluetoothTestJob"
+					android:permission="android.permission.BIND_JOB_SERVICE" >
+			</service>
+
+			<service android:name="org.altbeacon.beacon.service.ScanJob"
+					android:permission="android.permission.BIND_JOB_SERVICE">
+			</service>
+
+			<service android:name="org.altbeacon.beacon.service.BeaconService">
+				<meta-data android:name="longScanForcingEnabled" android:value="true"/>
+			</service>
+
+			<service android:name="org.altbeacon.beacon.BeaconIntentProcessor"
+				android:enabled="true"
+				android:exported="false"
+			/>
+
+			<receiver android:name="org.altbeacon.beacon.startup.StartupBroadcastReceiver">
+				<intent-filter>
+					<action android:name="android.intent.action.BOOT_COMPLETED" />
+					<action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+					<action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+				</intent-filter>
+			</receiver>
+		</config-file>
+	</platform>
 </plugin>
