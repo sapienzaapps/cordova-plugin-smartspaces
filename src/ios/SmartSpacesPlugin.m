@@ -1,5 +1,4 @@
 
-#import "SmartSpacesBeacon.h"
 #import "SmartSpacesPlugin.h"
 
 @implementation SmartSpacesPlugin
@@ -17,7 +16,6 @@
 {
     [self _handleCallSafely:^CDVPluginResult *(CDVInvokedUrlCommand *command) {
         NSString* url = [command.arguments objectAtIndex:0];
-        url = @"http://172.27.1.227:4567/";
         [self setBaseURL:url];
 
         if (url != nil && [url length] > 0) {
@@ -36,7 +34,7 @@
 {
     [self _handleCallSafely:^CDVPluginResult *(CDVInvokedUrlCommand *command) {
         NSLog(@"disableBeaconDetection");
-        // TODO
+
         for (CLRegion *region in _locationManager.monitoredRegions) {
             [_locationManager stopMonitoringForRegion: region];
         }
