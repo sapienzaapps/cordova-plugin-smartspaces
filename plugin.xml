@@ -12,6 +12,34 @@
 		<merges target="cordova.plugins"/>
 	</js-module>
 
+	<platform name="ios">
+		<config-file target="config.xml" parent="/*">
+			<feature name="SmartSpacesPlugin">
+				<param name="ios-package" value="SmartSpacesPlugin" />
+			</feature>
+		</config-file>
+
+		<config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
+			<string>This app would like to scan for iBeacons even when in the background.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+			<string>This app would like to scan for iBeacons while it is in use.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSBluetoothPeripheralUsageDescription">
+			<string>This app would like to scan for iBeacons.</string>
+		</config-file>
+		<config-file target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
+			<string>This app would like to scan for iBeacons both while in use and while in the background.</string>
+		</config-file>
+
+		<header-file src="src/ios/SmartSpacesPlugin.h"/>
+		<source-file src="src/ios/SmartSpacesPlugin.m"/>
+
+		<framework src="CoreBluetooth.framework" />
+		<framework src="CoreLocation.framework" />
+	</platform>
+
+
 	<platform name="android">
 		<config-file target="res/xml/config.xml" parent="/*">
 			<feature name="SmartSpacesPlugin" >
