@@ -52,9 +52,9 @@
 
     CLBeaconRegion *beaconRegion = (CLBeaconRegion*)region;
     if (state == CLRegionStateInside) {
-        [self sendData:[NSString stringWithFormat:@"deviceid=%@&uuid=%@&major=%d&minor=%d", [self deviceid], [beaconRegion proximityUUID], [[beaconRegion major] shortValue], [[beaconRegion minor] shortValue]] toApi:@"enter"];
+		[self performEnter:beaconRegion];
     } else {
-        [self sendData:[NSString stringWithFormat:@"deviceid=%@&uuid=%@&major=%d&minor=%d", [self deviceid], [beaconRegion proximityUUID], [[beaconRegion major] shortValue], [[beaconRegion minor] shortValue]] toApi:@"exit"];
+		[self performExit:beaconRegion];
     }
 }
 
@@ -62,14 +62,14 @@
     NSLog(@"didEnterRegion: %@", region);
     
     CLBeaconRegion *beaconRegion = (CLBeaconRegion*)region;
-    [self sendData:[NSString stringWithFormat:@"deviceid=%@&uuid=%@&major=%d&minor=%d", [self deviceid], [beaconRegion proximityUUID], [[beaconRegion major] shortValue], [[beaconRegion minor] shortValue]] toApi:@"enter"];
+	[self performEnter:beaconRegion];
 }
 
 -(void)locationManager:(CLLocationManager *)manager didExitRegion:(CLRegion *)region {
     NSLog(@"didExitRegion: %@", region);
     
     CLBeaconRegion *beaconRegion = (CLBeaconRegion*)region;
-    [self sendData:[NSString stringWithFormat:@"deviceid=%@&uuid=%@&major=%d&minor=%d", [self deviceid], [beaconRegion proximityUUID], [[beaconRegion major] shortValue], [[beaconRegion minor] shortValue]] toApi:@"exit"];
+	[self performExit:beaconRegion];
 }
 
 - (void)locationManager:(CLLocationManager *)manager didStartMonitoringForRegion:(CLRegion *)region {
@@ -112,19 +112,28 @@
     NSLog(@"Registered %d beacons", (int)[json count]);
 }
 
--(void) sendData:(NSString*)post_data toApi:(NSString*)apiName {
-    
-    NSData *postData = [post_data dataUsingEncoding:NSASCIIStringEncoding allowLossyConversion:YES];
-    NSString *postLength = [NSString stringWithFormat:@"%lu", (unsigned long)[postData length]];
-    
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
-    [request setURL:[NSURL URLWithString: [NSString stringWithFormat:@"%@%@", [self baseURL], apiName] ]];
-    [request setHTTPMethod:@"POST"];
-    [request setValue:postLength forHTTPHeaderField:@"Content-Length"];
-    [request setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
-    [request setHTTPBody:postData];
-    
-    NSURLSession *session = [NSURLSession sharedSession];
+-(void) performEnter:(CLBeaconRegion*)region {
+	NSString *url = [NSString stringWithFormat:@"%@regions/%@/%d/%d/%@", [self baseURL], [region proximityUUID], [[region major] shortValue], [[region minor] shortValue], [self deviceid]];
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+	[request setURL:[NSURL URLWithString: url ]];
+	[request setHTTPMethod:@"PUT"];
+	
+	NSURLSession *session = [NSURLSession sharedSession];
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data,
+                                                                                          NSURLResponse * _Nullable response,
+                                                                                          NSError * _Nullable error) {
+        // Ignore silently
+    }];
+    [task resume];
+}
+
+-(void) performExit:(CLBeaconRegion*)region {
+	NSString *url = [NSString stringWithFormat:@"%@regions/%@/%d/%d/%@", [self baseURL], [region proximityUUID], [[region major] shortValue], [[region minor] shortValue], [self deviceid]];
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] init];
+	[request setURL:[NSURL URLWithString: url ]];
+	[request setHTTPMethod:@"DELETE"];
+	
+	NSURLSession *session = [NSURLSession sharedSession];
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data,
                                                                                           NSURLResponse * _Nullable response,
                                                                                           NSError * _Nullable error) {
