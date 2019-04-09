@@ -55,10 +55,6 @@
 
 		<framework src="src/android/cordova-plugin-smartspaces.gradle" custom="true" type="gradleReference" />
 
-		<edit-config file="AndroidManifest.xml" target="/manifest/application" mode="merge">
-			<application android:name="it.sapienzaapps.cordova.smartspaces.SmartSpacesApplication" />
-		</edit-config>
-
 		<config-file target="AndroidManifest.xml" parent="/manifest">
 			<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 		</config-file>
